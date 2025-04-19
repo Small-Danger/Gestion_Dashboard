@@ -9,7 +9,7 @@ class Destination extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['company_id', 'country', 'city'];
+    protected $fillable = ['company_id','user_id', 'country', 'city'];
 
     public function company()
     {
@@ -17,8 +17,9 @@ class Destination extends Model
     }
     public function stockMovements()
     {
-        return $this->hasMany(StockMovement::class)->latest();
+        return $this->hasMany(StockMovement::class);
     }
+    
     // Dans app/Models/Destination.php
     public function currentStock()
     {

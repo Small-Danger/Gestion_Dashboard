@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('auth.register');
+    return view('landing.index');
 });
 
 use App\Http\Controllers\AuthController;
@@ -23,12 +23,15 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\DestinationController;
 use App\Http\Controllers\CompanyController;
-use App\Http\Controllers\StockMovementController;
+use App\Http\Controllers\StockController;
 
-
+use App\Http\Controllers\Api\DestinatiController;
 
 
 Route::middleware(['auth'])->group(function () {
+
+
+Route::get('/destinations/search', [DestinationController::class, 'search']);
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
@@ -38,17 +41,17 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('companies', CompanyController::class);
 
     // Route de suppression d’un mouvement (hors destination)
-    Route::delete('stock/{stockMovement}', [StockMovementController::class, 'destroy'])->name('stock.destroy');
+    Route::delete('stock/{stockMovement}', [StockController::class, 'destroy'])->name('stock.destroy');
 
      // Routes de gestion des stocks par destination
-     Route::get('{destination}/stock', [StockMovementController::class, 'index'])->name('stock.index');
-     Route::get('{destination}/stock/create', [StockMovementController::class, 'create'])->name('stock.create');
-     Route::post('{destination}/stock', [StockMovementController::class, 'store'])->name('stock.store');
+ //      Route::get('{destination}/stock', [StockMovementController::class, 'index'])->name('stock.index');
+  //     Route::get('{destination}/stock/create', [StockMovementController::class, 'create'])->name('stock.create');
+  //     Route::post('{destination}/stock', [StockMovementController::class, 'store'])->name('stock.store');
 
 
      // Routes pour la gestion des stocks
 Route::post('companies/{company}/stock', [CompanyController::class, 'storeStock'])->name('companies.stock.store');
-Route::put('stock/{stockMovement}', [StockMovementController::class, 'update'])->name('stock.update');
+Route::put('stock/{stockMovement}', [StockController::class, 'update'])->name('stock.update');
 
     // Routes pour la gestion des stocks par compagnie
 Route::get('companies/stock', [CompanyController::class, 'stockIndex'])->name('companies.stock.index');

@@ -7,33 +7,36 @@ use App\Models\Company;
 use App\Models\Transaction;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
     public function index()
     {
+        $userId = Auth::id(); // ID de l'utilisateur connecté
+
         // Statistiques principales
         $stats = [
-            'active_clients' => Client::count(),
-            'total_balance' => Client::sum('balance'),
-            'companies_count' => Company::count(),
-            'total_stock' => StockMovement::sum('remaining') ?? 0,
+            'active_clients' => Client::where('user_id', $userId)->count(),
+            'total_balance' => Client::where('user_id', $userId)->sum('balance'),
+            'companies_count' => Company::where('user_id', $userId)->count(),
+            'total_stock' => StockMovement::where('user_id', $userId)->sum('remaining') ?? 0,
         ];
 
-        // Dernières transactions
+        // Dernières transactions de l'utilisateur connecté
         $recent_transactions = Transaction::with('client')
+            ->where('user_id', $userId)
             ->latest()
             ->take(5)
             ->get();
 
-        // Alertes de stock (moins de 10% du stock initial)
-        $stock_alerts = StockMovement::with(['destination.company'])
-            ->selectRaw('destination_id, SUM(remaining) as current_stock')
-            ->groupBy('destination_id')
-            ->havingRaw('SUM(remaining) < (SELECT SUM(quantity) FROM stock_movements WHERE type = "in" AND destination_id = stock_movements.destination_id) * 0.1')
+        // Derniers mouvements de stock enregistrés
+        $recent_stock_movements = StockMovement::with(['destination.company'])
+            ->where('user_id', $userId)
+            ->latest()
             ->take(5)
             ->get();
 
-        return view('dashboard', compact('stats', 'recent_transactions', 'stock_alerts'));
+        return view('dashboard', compact('stats', 'recent_transactions', 'recent_stock_movements'));
     }
 }

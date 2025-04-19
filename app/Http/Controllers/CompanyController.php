@@ -9,69 +9,60 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
-
 class CompanyController extends Controller
 {
-    /**
-     * Affiche la liste des compagnies.
-     */
     public function index()
     {
-        $companies = Company::latest()->paginate(10);
+        $companies = Company::where('user_id', auth()->id())
+            ->latest()
+            ->paginate(10);
+
         return view('companies.index', compact('companies'));
     }
 
-    /**
-     * Affiche le formulaire de création d'une compagnie.
-     */
     public function create()
     {
         return view('companies.create');
     }
 
-    /**
-     * Enregistre une nouvelle compagnie.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name'        => 'required|string|max:255|unique:companies,name',
             'logo'        => 'nullable|image|max:2048',
             'description' => 'nullable|string',
-            'stock'    => 'nullable|numeric|min:0',
+            'stock'       => 'nullable|numeric|min:0',
         ]);
 
         if ($request->hasFile('logo')) {
             $validated['logo'] = $request->file('logo')->store('logos', 'public');
         }
 
+        $validated['user_id'] = auth()->id();
+
         Company::create($validated);
 
         return redirect()->route('companies.index')->with('success', 'Compagnie ajoutée avec succès.');
     }
 
-    /**
-     * Affiche le formulaire d'édition.
-     */
     public function edit(Company $company)
     {
+        $this->authorizeCompany($company);
         return view('companies.edit', compact('company'));
     }
 
-    /**
-     * Met à jour une compagnie existante.
-     */
     public function update(Request $request, Company $company)
     {
+        $this->authorizeCompany($company);
+
         $validated = $request->validate([
             'name'        => 'required|string|max:255|unique:companies,name,' . $company->id,
             'logo'        => 'nullable|image|max:2048',
             'description' => 'nullable|string',
-            'stock'    => 'nullable|numeric|min:0',
+            'stock'       => 'nullable|numeric|min:0',
         ]);
 
         if ($request->hasFile('logo')) {
-            // Supprimer l'ancien logo si présent
             if ($company->logo) {
                 Storage::disk('public')->delete($company->logo);
             }
@@ -83,67 +74,89 @@ class CompanyController extends Controller
         return redirect()->route('companies.index')->with('success', 'Compagnie mise à jour avec succès.');
     }
 
-    /**
-     * Supprime une compagnie.
-     */
     public function destroy(Company $company)
     {
-        // Supprimer le logo si présent
+        $this->authorizeCompany($company);
+
         if ($company->logo) {
             Storage::disk('public')->delete($company->logo);
         }
+        // Vérifier si la compagnie a des destinations associées
+        if ($company->destinations()->exists()) {
+            return back()->withErrors(['company' => 'Impossible de supprimer la compagnie car elle a des destinations associées.']);
+        }
+        // Vérifier si la compagnie a des mouvements de stock associés
+        if ($company->destinations()->with('stockMovements')->exists()) {
+            return back()->withErrors(['company' => 'Impossible de supprimer la compagnie car elle a des mouvements de stock associés.']);
+        }
+
+// Supprimer d'abord les destinations liées
+$company->destinations()->delete();
+
+// Ensuite supprimer la compagnie
+$company->delete();
+
 
         $company->delete();
 
         return back()->with('success', 'Compagnie supprimée avec succès.');
     }
+
     public function stockIndex()
     {
-        $companies = Company::withCount('destinations')
+        $companies = Company::where('user_id', auth()->id())
+            ->withCount('destinations')
             ->with('destinations')
             ->paginate(10);
-        
-        $totalStock = Destination::sumCurrentStock();
-        
+
+        $totalStock = Destination::where('user_id', auth()->id())->sumCurrentStock();
+
         return view('companies.stock', compact('companies', 'totalStock'));
     }
 
+    public function stockDestinations(Company $company)
+    {
+        $this->authorizeCompany($company);
 
-    // Dans CompanyController.php
-public function stockDestinations(Company $company)
-{
-    $destinations = $company->destinations()
-        ->withCount('stockMovements')
-        ->with(['stockMovements' => function($query) {
-            $query->latest()->limit(1);
-        }])
-        ->paginate(10);
+        $destinations = $company->destinations()
+            ->where('user_id', auth()->id())
+            ->withCount('stockMovements')
+            ->with(['stockMovements' => function($query) {
+                $query->latest()->limit(1);
+            }])
+            ->paginate(10);
 
-    // Récupérer tous les mouvements avec filtre optionnel
-    $movementsQuery = StockMovement::whereIn('destination_id', $company->destinations->pluck('id'))
-        ->with('destination')
-        ->latest();
+        $movementsQuery = StockMovement::whereIn(
+                'destination_id',
+                $company->destinations()->where('user_id', auth()->id())->pluck('id')
+            )
+            ->with('destination')
+            ->latest();
 
-    if(request('destination_id')) {
-        $movementsQuery->where('destination_id', request('destination_id'));
+        if(request('destination_id')) {
+            $movementsQuery->where('destination_id', request('destination_id'));
+        }
+
+        $movements = $movementsQuery->paginate(10);
+
+        return view('companies.stock', compact('company', 'destinations', 'movements'));
     }
 
-    $movements = $movementsQuery->paginate(10);
+    public function storeStock(Request $request, Company $company)
+    {
+        $this->authorizeCompany($company);
 
-    return view('companies.stock', compact('company', 'destinations', 'movements'));
-}
+        $validated = $request->validate([
+            'destination_id' => 'required|exists:destinations,id,company_id,' . $company->id,
+            'type'           => 'required|in:in,out',
+            'quantity'       => 'required|numeric|min:0.01',
+            'notes'          => 'nullable|string',
+        ]);
 
-public function storeStock(Request $request, Company $company)
-{
-    $validated = $request->validate([
-        'destination_id' => 'required|exists:destinations,id,company_id,'.$company->id,
-        'type' => 'required|in:in,out',
-        'quantity' => 'required|numeric|min:0.01',
-        'notes' => 'nullable|string',
-    ]);
+        $destination = Destination::where('id', $validated['destination_id'])
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
 
-    DB::transaction(function () use ($validated) {
-        $destination = Destination::find($validated['destination_id']);
         $lastRemaining = $destination->stockMovements()->latest()->value('remaining') ?? 0;
 
         $newRemaining = $validated['type'] === 'in'
@@ -154,15 +167,28 @@ public function storeStock(Request $request, Company $company)
             return back()->withErrors(['quantity' => 'Stock insuffisant pour ce mouvement sortant.'])->withInput();
         }
 
-        StockMovement::create([
-            'destination_id' => $validated['destination_id'],
-            'type' => $validated['type'],
-            'quantity' => $validated['quantity'],
-            'remaining' => $newRemaining,
-            'notes' => $validated['notes'] ?? null,
-        ]);
-    });
+        DB::transaction(function () use ($validated, $newRemaining) {
+            $validated['user_id'] = auth()->id(); // Ajout de l'utilisateur courant
+            StockMovement::create([
+                'destination_id' => $validated['destination_id'],
+                'user_id'        => $validated['user_id'],
+                'type'           => $validated['type'],
+                'quantity'       => $validated['quantity'],
+                'remaining'      => $newRemaining,
+                'notes'          => $validated['notes'] ?? null,
+            ]);
+        });
 
-    return redirect()->route('companies.stock.destinations', $company)->with('success', 'Mouvement enregistré avec succès.');
-}
+        return redirect()->route('companies.stock.destinations', $company)->with('success', 'Mouvement enregistré avec succès.');
+    }
+
+    /**
+     * Vérifie que la compagnie appartient à l'utilisateur connecté.
+     */
+    private function authorizeCompany(Company $company)
+    {
+        if ($company->user_id !== auth()->id()) {
+            abort(403, 'Accès non autorisé.');
+        }
+    }
 }

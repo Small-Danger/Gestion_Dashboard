@@ -8,36 +8,37 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class TransactionController extends Controller
 {
     /**
-     * Affiche les transactions d’un client.
+     * Affiche les transactions d’un client appartenant à l’utilisateur connecté.
      */
-
-
     public function index(Client $client)
     {
-        $transactions = $client->transactions()->latest()->paginate(10);
+        if ($client->user_id !== auth()->id()) {
+            abort(403, 'Accès interdit');
+        }
 
+        $transactions = $client->transactions()->latest()->paginate(10);
         $client->load('transactions');
-        
-        // Convertir transaction_date en objet Carbon si nécessaire
+
         foreach ($client->transactions as $transaction) {
             $transaction->transaction_date = Carbon::parse($transaction->transaction_date);
         }
 
         return view('clients.transactions.index', compact('client', 'transactions'));
     }
-    
-    
 
     /**
      * Enregistre une nouvelle transaction.
      */
     public function store(Request $request, $client_id)
     {
-        $client = Client::findOrFail($request->input('client_id'));
+        $client = Client::where('id', $client_id)
+                        ->where('user_id', auth()->id())
+                        ->firstOrFail();
 
         $validated = $request->validate([
             'type'   => ['required', Rule::in(['deposit', 'withdrawal'])],
@@ -45,7 +46,6 @@ class TransactionController extends Controller
             'notes'  => 'nullable|string',
         ]);
 
-        // Empêche un doublon exact (client, type, montant, date)
         $existing = Transaction::where('client_id', $client->id)
             ->where('type', $validated['type'])
             ->where('amount', $validated['amount'])
@@ -65,22 +65,19 @@ class TransactionController extends Controller
                 ? $balanceBefore + $amount
                 : $balanceBefore - $amount;
 
-            if ($type === 'withdrawal' && $balanceAfter < 0) {
-                abort(400, 'Solde insuffisant pour effectuer ce retrait.');
-            }
-            
-            // Enregistrement de la transaction
+
+            $validated['user_id'] = Auth::id();
             Transaction::create([
-                'client_id'      => $client->id,
-                'type'           => $type,
-                'amount'         => $amount,
-                'balance_before' => $balanceBefore,
-                'balance_after'  => $balanceAfter,
-                'notes'          => $validated['notes'] ?? null,
+                'client_id'        => $client->id,
+                'user_id'          => $validated['user_id'],
+                'type'             => $type,
+                'amount'           => $amount,
+                'balance_before'   => $balanceBefore,
+                'balance_after'    => $balanceAfter,
+                'notes'            => $validated['notes'] ?? null,
                 'transaction_date' => now(),
             ]);
 
-            // Mise à jour du solde du client
             $client->update(['balance' => $balanceAfter]);
         });
 
@@ -88,12 +85,16 @@ class TransactionController extends Controller
     }
 
     /**
-     * Supprime une transaction et ajuste le solde.
+     * Supprime une transaction appartenant à l’utilisateur.
      */
     public function destroy($client_id, $transaction_id)
     {
-        $client = Client::findOrFail($client_id);
-        $transaction = Transaction::where('client_id', $client->id)->findOrFail($transaction_id);
+        $client = Client::where('id', $client_id)
+                        ->where('user_id', auth()->id())
+                        ->firstOrFail();
+
+        $transaction = Transaction::where('client_id', $client->id)
+                                  ->findOrFail($transaction_id);
 
         DB::transaction(function () use ($transaction, $client) {
             if ($transaction->type === 'deposit') {
@@ -110,23 +111,31 @@ class TransactionController extends Controller
     }
 
     /**
-     * Affiche le formulaire d’édition d'une transaction.
+     * Formulaire de modification.
      */
     public function edit($client_id, $transaction_id)
     {
-        $client = Client::findOrFail($client_id);
-        $transaction = Transaction::where('client_id', $client_id)->findOrFail($transaction_id);
+        $client = Client::where('id', $client_id)
+                        ->where('user_id', auth()->id())
+                        ->firstOrFail();
+
+        $transaction = Transaction::where('client_id', $client_id)
+                                  ->findOrFail($transaction_id);
 
         return view('clients.transactions.edit', compact('client', 'transaction'));
     }
 
     /**
-     * Met à jour une transaction existante et ajuste le solde du client.
+     * Met à jour une transaction.
      */
     public function update(Request $request, $client_id, $transaction_id)
     {
-        $client = Client::findOrFail($client_id);
-        $transaction = Transaction::where('client_id', $client_id)->findOrFail($transaction_id);
+        $client = Client::where('id', $client_id)
+                        ->where('user_id', auth()->id())
+                        ->firstOrFail();
+
+        $transaction = Transaction::where('client_id', $client_id)
+                                  ->findOrFail($transaction_id);
 
         $validated = $request->validate([
             'type'   => ['required', Rule::in(['deposit', 'withdrawal'])],
@@ -135,7 +144,6 @@ class TransactionController extends Controller
         ]);
 
         DB::transaction(function () use ($validated, $transaction, $client) {
-            // Annuler effet de l’ancienne transaction
             if ($transaction->type === 'deposit') {
                 $client->balance -= $transaction->amount;
             } else {
@@ -165,6 +173,7 @@ class TransactionController extends Controller
             $client->update(['balance' => $balanceAfter]);
         });
 
-        return redirect()->route('clients.transactions.index', $client_id)->with('success', 'Transaction mise à jour.');
+        return redirect()->route('clients.transactions.index', $client_id)
+                         ->with('success', 'Transaction mise à jour.');
     }
 }

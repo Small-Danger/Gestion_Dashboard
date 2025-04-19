@@ -1,158 +1,155 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard Financier')
+@section('page-title', 'Tableau de Bord')
 
 @section('content')
-<div class="container mx-auto px-4 py-4 sm:py-6">
-    <!-- Header -->
-    <div class="mb-6">
-        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Tableau de Bord</h1>
-        <p class="text-sm sm:text-base text-gray-600 mt-1">Aperçu global de votre activité</p>
-    </div>
+<div class="container mx-auto px-4 py-6">
+    <!-- Titre principal -->
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+        Résumé de votre activité
+    </h2>
 
-    <!-- Stats Cards - Mobile First Grid -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6 sm:mb-8">
-        <!-- Clients Card -->
-        <div class="bg-white rounded-lg shadow p-4 sm:p-5">
-            <div class="flex items-center">
-                <div class="flex-shrink-0 bg-indigo-100 p-3 rounded-lg">
-                    <svg class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
+    <!-- Cartes statistiques -->
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <!-- Carte Clients -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Clients actifs</p>
+                    <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">{{ $stats['active_clients'] }}</p>
                 </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-500">Clients actifs</p>
-                    <p class="text-xl sm:text-2xl font-semibold text-gray-900">{{ $stats['active_clients'] }}</p>
+                <div class="p-3 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300">
+                    <i class="fas fa-users text-xl"></i>
                 </div>
             </div>
-            <div class="mt-4">
-                <a href="{{ route('clients.index') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">Voir tous →</a>
-            </div>
+            <a href="{{ route('clients.index') }}" class="mt-4 inline-block text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300">
+                Voir tous les clients →
+            </a>
         </div>
 
-        <!-- Solde Card -->
-        <div class="bg-white rounded-lg shadow p-4 sm:p-5">
-            <div class="flex items-center">
-                <div class="flex-shrink-0 bg-green-100 p-3 rounded-lg">
-                    <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+        <!-- Carte Solde -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Solde total</p>
+                    <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">{{ number_format($stats['total_balance'], 0, ',', ' ') }} FCFA</p>
                 </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-500">Solde total</p>
-                    <p class="text-xl sm:text-2xl font-semibold text-gray-900">{{ number_format($stats['total_balance'], 0, ',', ' ') }} FCFA</p>
+                <div class="p-3 rounded-full bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300">
+                    <i class="fas fa-money-bill-wave text-xl"></i>
                 </div>
             </div>
-            <div class="mt-4">
-                <a href="{{ route('clients.index') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">Voir transactions →</a>
-            </div>
+            <a href="{{ route('clients.index') }}" class="mt-4 inline-block text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300">
+                Voir les transactions →
+            </a>
         </div>
 
-        <!-- Compagnies Card -->
-        <div class="bg-white rounded-lg shadow p-4 sm:p-5">
-            <div class="flex items-center">
-                <div class="flex-shrink-0 bg-blue-100 p-3 rounded-lg">
-                    <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
+        <!-- Carte Compagnies -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Compagnies</p>
+                    <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">{{ $stats['companies_count'] }}</p>
                 </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-500">Compagnies</p>
-                    <p class="text-xl sm:text-2xl font-semibold text-gray-900">{{ $stats['companies_count'] }}</p>
+                <div class="p-3 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300">
+                    <i class="fas fa-building text-xl"></i>
                 </div>
             </div>
-            <div class="mt-4">
-                <a href="{{ route('companies.index') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">Gérer →</a>
-            </div>
+            <a href="{{ route('companies.index') }}" class="mt-4 inline-block text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300">
+                Gérer les compagnies →
+            </a>
         </div>
 
-        <!-- Stock Card -->
-        <div class="bg-white rounded-lg shadow p-4 sm:p-5">
-            <div class="flex items-center">
-                <div class="flex-shrink-0 bg-yellow-100 p-3 rounded-lg">
-                    <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
+        <!-- Carte Stock -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Stock total</p>
+                    <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">{{ number_format($stats['total_stock'], 0, ',', ' ') }} kg</p>
                 </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-500">Stock total</p>
-                    <p class="text-xl sm:text-2xl font-semibold text-gray-900">{{ number_format($stats['total_stock'], 0, ',', ' ') }} kg</p>
+                <div class="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-300">
+                    <i class="fas fa-boxes text-xl"></i>
                 </div>
             </div>
-            <div class="mt-4">
-                <a href="{{ route('companies.index') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">Gérer →</a>
-            </div>
+            <a href="{{ route('companies.index') }}" class="mt-4 inline-block text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300">
+                Voir les mouvements →
+            </a>
         </div>
     </div>
 
-    <!-- Main Content Grid -->
+    <!-- Sections principales -->
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <!-- Dernières Transactions -->
-        <div class="bg-white rounded-lg shadow overflow-hidden">
-            <div class="px-4 py-4 sm:px-6 border-b border-gray-200">
-                <h3 class="text-lg font-medium text-gray-900">Dernières transactions</h3>
-                <p class="mt-1 text-sm text-gray-500">Les 5 dernières opérations</p>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+            <div class="px-5 py-4 border-b dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Dernières transactions</h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Les 5 dernières opérations enregistrées</p>
             </div>
-            <div class="divide-y divide-gray-200">
+            <div class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($recent_transactions as $transaction)
-                <div class="px-4 py-4 sm:px-6 hover:bg-gray-50">
+                <div class="px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-900">
-                                {{ $transaction->type === 'deposit' ? 'Versement' : 'Retrait' }} - 
+                            <p class="font-medium text-gray-900 dark:text-white">
                                 {{ $transaction->client->name ?? 'Client supprimé' }}
                             </p>
-                            <p class="text-sm text-gray-500 mt-1">
-                                {{ $transaction->created_at->format('d/m/Y H:i') }}
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                {{ $transaction->created_at->format('d/m/Y H:i') }} - 
+                                {{ $transaction->type === 'deposit' ? 'Versement' : 'Retrait' }}
                             </p>
                         </div>
-                        <p class="text-sm font-medium {{ $transaction->type === 'deposit' ? 'text-green-600' : 'text-red-600' }}">
+                        <span class="font-medium {{ $transaction->type === 'deposit' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
                             {{ $transaction->type === 'deposit' ? '+' : '-' }}{{ number_format($transaction->amount, 0, ',', ' ') }} FCFA
-                        </p>
-                    </div>
-                </div>
-                @empty
-                <div class="px-4 py-4 text-center text-sm text-gray-500">
-                    Aucune transaction récente
-                </div>
-                @endforelse
-            </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6">
-                <a href="{{ route('clients.index') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">Voir toutes →</a>
-            </div>
-        </div>
-
-        <!-- Alertes de Stock -->
-        <div class="bg-white rounded-lg shadow overflow-hidden">
-            <div class="px-4 py-4 sm:px-6 border-b border-gray-200">
-                <h3 class="text-lg font-medium text-gray-900">Alertes de stock</h3>
-                <p class="mt-1 text-sm text-gray-500">Stocks nécessitant attention</p>
-            </div>
-            <div class="divide-y divide-gray-200">
-                @forelse($stock_alerts as $alert)
-                <div class="px-4 py-4 sm:px-6 hover:bg-gray-50">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-gray-900">
-                                {{ $alert->destination->country }} - {{ $alert->destination->company->name }}
-                            </p>
-                            <p class="text-sm text-gray-500 mt-1">
-                                Stock actuel: {{ $alert->current_stock }} kg
-                            </p>
-                        </div>
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                            Critique
                         </span>
                     </div>
                 </div>
                 @empty
-                <div class="px-4 py-4 text-center text-sm text-gray-500">
-                    Aucune alerte de stock
+                <div class="px-5 py-4 text-center text-gray-500 dark:text-gray-400">
+                    Aucune transaction récente
                 </div>
                 @endforelse
             </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6">
-                <a href="{{ route('companies.index') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">Gérer les stocks →</a>
+            <div class="px-5 py-3 bg-gray-50 dark:bg-gray-700 text-right">
+                <a href="{{ route('clients.index') }}" class="text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300">
+                    Voir toutes les transactions →
+                </a>
+            </div>
+        </div>
+
+        <!-- Derniers Mouvements de Stock -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+            <div class="px-5 py-4 border-b dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Derniers mouvements</h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Les 5 derniers mouvements de stock</p>
+            </div>
+            <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                @forelse($recent_stock_movements as $movement)
+                <div class="px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-medium text-gray-900 dark:text-white">
+                                {{ $movement->destination->company->name ?? 'Compagnie inconnue' }}
+                            </p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                {{ $movement->created_at->format('d/m/Y H:i') }} - 
+                                {{ $movement->quantity }} kg
+                            </p>
+                        </div>
+                        <span class="px-2 py-1 text-xs font-medium rounded-full 
+                            {{ $movement->remaining < 50 ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' }}">
+                            {{ $movement->remaining }} kg restant
+                        </span>
+                    </div>
+                </div>
+                @empty
+                <div class="px-5 py-4 text-center text-gray-500 dark:text-gray-400">
+                    Aucun mouvement de stock récent
+                </div>
+                @endforelse
+            </div>
+            <div class="px-5 py-3 bg-gray-50 dark:bg-gray-700 text-right">
+                <a href="{{ route('companies.index') }}" class="text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300">
+                    Voir tous les mouvements →
+                </a>
             </div>
         </div>
     </div>

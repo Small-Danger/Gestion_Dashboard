@@ -3,10 +3,7 @@
 @section('content')
 <div class="container mx-auto px-4 py-4 sm:py-8">
     <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-4">
-        <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Stocks pour {{ $company->name }}</h1>
-            <div class="flex items-center mt-1 sm:mt-2">
+    <div class="flex items-center mt-1 sm:mt-2">
                 <a href="{{ route('companies.index') }}" class="text-blue-600 hover:text-blue-800 flex items-center text-sm sm:text-base">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -14,8 +11,12 @@
                     Retour aux compagnies
                 </a>
                 <span class="mx-2 text-gray-400">/</span>
-                <span class="text-gray-600 text-sm sm:text-base">Gestion des stocks</span>
+                <span class="text-gray-600 text-sm sm:text-base">Gestion des stocks de {{ $company->name }}</span>
             </div>
+            <br>
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-4">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Stocks pour {{ $company->name }}</h1>
         </div>
         <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 sm:space-x-4">
             <div class="bg-blue-100 text-blue-800 px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-sm sm:text-base">
@@ -196,7 +197,7 @@
                 </div>
                 @endif
                 <div class="mt-3 flex justify-end space-x-3 text-sm">
-                    <button onclick="openEditMovementModal({{ $movement->id }}, '{{ $movement->type }}', {{ $movement->quantity }}, `{{ $movement->notes }}`, {{ $movement->destination_id }})" 
+                    <button onclick="openEditMovementModal('{{ $movement->id }}', '{{ $movement->type }}', '{{ $movement->quantity }}', `{{ $movement->notes }}`,' {{ $movement->destination_id }}')" 
                             class="text-blue-600 hover:text-blue-900">Modifier</button>
                     <form action="{{ route('stock.destroy', $movement) }}" method="POST" class="inline">
                         @csrf
@@ -259,7 +260,7 @@
                             <div class="text-sm text-gray-500 max-w-xs truncate">{{ $movement->notes ?? '-' }}</div>
                         </td>
                         <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button onclick="openEditMovementModal({{ $movement->id }}, '{{ $movement->type }}', {{ $movement->quantity }}, `{{ $movement->notes }}`, {{ $movement->destination_id }})" 
+                            <button onclick="openEditMovementModal('{{ $movement->id }}', '{{ $movement->type }}',' {{ $movement->quantity }}', `{{ $movement->notes }}`, '{{ $movement->destination_id }}')" 
                                     class="text-blue-600 hover:text-blue-900 mr-3">Modifier</button>
                             <form action="{{ route('stock.destroy', $movement) }}" method="POST" class="inline">
                                 @csrf

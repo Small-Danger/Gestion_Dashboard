@@ -1,14 +1,21 @@
 @extends('layouts.app')
-
+@section('page-title', 'Gestion des Compagnies')
 @section('content')
 <div class="container mx-auto px-4 py-8">
     <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-        <h1 class="text-2xl font-bold text-gray-800">Gestion des Compagnies</h1>
+        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center w-full sm:w-auto justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+            </svg>
+            <a href="{{ route('destinations.index') }}" >
+            Ajouter Destination à une Compagnie
+            </a>
+        </button>
         <button onclick="openModal('create-modal')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center w-full sm:w-auto justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
             </svg>
-            Nouvelle Compagnie
+            Ajouter Nouvelle Compagnie
         </button>
     </div>
 
@@ -30,8 +37,8 @@
                     <p class="text-sm font-medium text-gray-900 truncate">{{ $company->name }}</p>
                     <p class="text-sm text-gray-500 truncate">{{ $company->description ?? 'N/A' }}</p>
                 </div>
-                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $company->calculateCurrentBalance() >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                    {{ number_format($company->calculateCurrentBalance(), 2) }} Kg
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $company->currentStock()  >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                    {{ $company->currentStock() }} Kg
                 </span>
             </div>
             <div class="flex justify-between items-center mt-2">
@@ -94,12 +101,12 @@
                             <div class="text-sm text-gray-500 max-w-xs truncate">{{ $company->description ?? 'N/A' }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $company->calculateCurrentBalance() >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                {{ number_format($company->calculateCurrentBalance(), 2) }} Kg
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $company->currentStock()  >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                            {{ $company->currentStock() }} Kg
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
-                            <button onclick="openEditModal('{{ $company->id }}', '{{ $company->name }}', `{{ $company->description ?? '' }}`, '{{ $company->logo ? asset('storage/' . $company->logo) : '' }}', '{{ $company->calculateCurrentBalance() }}')" class="text-blue-600 hover:text-blue-900">Modifier</button>
+                        <button onclick='openEditModal('{{ $company->id }}', '{{ $company->name }}', '{{ $company->description ?? '' }}', '{{ $company->logo ? asset('storage/' . $company->logo) : null }}', '{{ $company->calculateCurrentBalance() }}')' class="text-blue-600 hover:text-blue-900">Modifier</button>
                             <button onclick="openDeleteModal('{{ $company->id }}')" class="text-red-600 hover:text-red-900">Supprimer</button>
                             <td><a href="{{ route('companies.stock.destinations', $company) }}" class="text-indigo-600 hover:text-indigo-900 flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">

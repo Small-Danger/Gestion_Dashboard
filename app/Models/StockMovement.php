@@ -9,7 +9,7 @@ class StockMovement extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['destination_id', 'type', 'quantity', 'remaining','notes'];
+    protected $fillable = ['destination_id','user_id', 'type', 'quantity', 'remaining','notes'];
 
     public function destination()
     {

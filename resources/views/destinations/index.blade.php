@@ -1,12 +1,21 @@
 @extends('layouts.app')
 
-@section('title', 'Gestion des Destinations')
 
 @section('content')
 <div class="container mx-auto px-4 py-4 sm:py-8">
     <!-- Header Section -->
+
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-4">
-        <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Gestion des Destinations</h1>
+            <div class="flex items-center mt-1 sm:mt-2">
+                <a href="{{ route('companies.index') }}" class="text-blue-600 hover:text-blue-800 flex items-center text-sm sm:text-2xl font-bold">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Retour aux compagnies
+                </a>
+                <span class="mx-2 text-gray-400">/</span>
+                <span class="text-gray-600 text-sm sm:text-2xl font-bold">Gestion des Destinations</span>
+            </div>
         <button onclick="openModal('create-modal')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center text-sm sm:text-base">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
